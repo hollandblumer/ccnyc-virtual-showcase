@@ -10,7 +10,6 @@ export default function PasswordGate({
   const [input, setInput] = useState("");
   const [unlocked, setUnlocked] = useState(false);
   const [error, setError] = useState(false);
-  const [isMounted, setIsMounted] = useState(false);
 
   // Prefer env var if present; fallback to a hardcoded code so your build still works
   const PASSWORD = useMemo(() => {
@@ -19,15 +18,17 @@ export default function PasswordGate({
   }, []);
 
   useEffect(() => {
-    setIsMounted(true);
+    const restore = window.requestAnimationFrame(() => {
+      try {
+        if (sessionStorage.getItem("unlocked") === "true") {
+          setUnlocked(true);
+        }
+      } catch {
+        // sessionStorage can be blocked in some contexts; ignore
+      }
+    });
 
-    // Optional: persist until tab closes
-    try {
-      const saved = sessionStorage.getItem("unlocked");
-      if (saved === "true") setUnlocked(true);
-    } catch {
-      // sessionStorage can be blocked in some contexts; ignore
-    }
+    return () => window.cancelAnimationFrame(restore);
   }, []);
 
   function unlock() {
@@ -54,7 +55,6 @@ export default function PasswordGate({
     }
   }
 
-  if (!isMounted) return null;
   if (unlocked) return <>{children}</>;
 
   return (
