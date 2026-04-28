@@ -1,54 +1,57 @@
-type HomeTopBarProps = {
-  query: string;
-  onQueryChange: (value: string) => void;
-};
-
-export default function HomeTopBar({
-  query,
-  onQueryChange,
-}: HomeTopBarProps) {
+export default function HomeTopBar() {
   return (
-    <div className="flex flex-col items-stretch justify-between gap-5 lg:flex-row lg:items-start">
+    <div className="pointer-events-none">
       <a
         href="#"
-        className="inline-flex max-w-fit items-center justify-center rounded-full border-2 border-white/50 bg-white/10 px-6 py-4 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.2)] backdrop-blur-[4px]"
+        aria-label="Menu"
+        className="home-brand-mark pointer-events-auto absolute left-[26px] top-[12px] inline-flex h-14 w-14 items-center justify-center text-[#111111]"
       >
-        <span className="font-display text-[clamp(20px,2.2vw,38px)] leading-[0.9] uppercase tracking-[0.01em] text-[#111111]">
-          Creative Coding NYC
-        </span>
+        <svg
+          aria-hidden="true"
+          fill="none"
+          height="30"
+          viewBox="0 0 24 24"
+          width="30"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M4 7H20M4 12H20M4 17H20"
+            stroke="currentColor"
+            strokeLinecap="round"
+            strokeWidth="1.8"
+          />
+        </svg>
       </a>
 
-      <div className="flex flex-wrap items-center justify-start gap-3 lg:justify-end">
-        <label className="flex h-12 min-w-0 flex-1 items-center gap-3 rounded-full border border-black/10 bg-white/40 px-4 shadow-[0_8px_28px_rgba(0,0,0,0.08)] backdrop-blur-[10px] lg:min-w-[260px] lg:flex-none">
-          <svg
-            width="18"
-            height="18"
-            viewBox="0 0 24 24"
-            fill="none"
-            aria-hidden="true"
-            className="shrink-0 text-black/60"
-          >
-            <circle cx="11" cy="11" r="7" stroke="currentColor" strokeWidth="2" />
-            <path
-              d="M20 20L17 17"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-            />
-          </svg>
-          <input
-            type="text"
-            value={query}
-            onChange={(event) => onQueryChange(event.target.value)}
-            placeholder="Search posters, artists..."
-            className="w-full border-0 bg-transparent text-[15px] font-medium text-[#111111] outline-none placeholder:text-black/45"
+      <a
+        aria-label="Instagram"
+        className="pointer-events-auto absolute right-[22px] top-[17px] inline-flex h-12 w-12 items-center justify-center text-[#111111]"
+        href="https://www.instagram.com/"
+        rel="noreferrer"
+        target="_blank"
+      >
+        <svg
+          aria-hidden="true"
+          fill="none"
+          height="28"
+          viewBox="0 0 24 24"
+          width="28"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <rect
+            height="14"
+            rx="4"
+            stroke="currentColor"
+            strokeWidth="1.8"
+            width="14"
+            x="5"
+            y="5"
           />
-        </label>
+          <circle cx="12" cy="12" r="3.25" stroke="currentColor" strokeWidth="1.8" />
+          <circle cx="16.6" cy="7.4" fill="currentColor" r="1.1" />
+        </svg>
+      </a>
 
-        <button className="home-navlink">Artists</button>
-        <button className="home-navlink">About</button>
-        <button className="home-pill-btn">Submit</button>
-      </div>
     </div>
   );
 }

@@ -48,6 +48,18 @@ body {
   font-family: var(--font-display);
 }
 
+.font-brand {
+  font-family: var(--font-svn-gilroy), var(--font-bungee), "Arial Black", sans-serif;
+}
+
+.font-goli {
+  font-family: var(--font-goli-semibold), var(--font-manrope), "Avenir Next", sans-serif;
+}
+
+.font-halo {
+  font-family: var(--font-halo-grotesk), var(--font-manrope), "Avenir Next", sans-serif;
+}
+
 .home-shell {
   position: fixed;
   inset: 0;
@@ -68,6 +80,113 @@ body {
   height: 100%;
 }
 
+.wiggle-text {
+  pointer-events: none;
+}
+
+.wiggle-text canvas {
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.brand-letter-layer {
+  backface-visibility: hidden;
+  transform: translateZ(0);
+  will-change: opacity, filter;
+}
+
+.brand-letter-layer--plain {
+  filter: blur(0);
+}
+
+.brand-letter-layer--wiggle {
+  filter: blur(0.15px);
+}
+
+@keyframes brand-letter-plain {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  18% {
+    opacity: 1;
+  }
+  34% {
+    opacity: 0.78;
+  }
+  48% {
+    opacity: 0.22;
+  }
+  62% {
+    opacity: 0.12;
+  }
+  78% {
+    opacity: 0.82;
+  }
+}
+
+@keyframes brand-letter-wiggle {
+  0%,
+  100% {
+    opacity: 0;
+  }
+  18% {
+    opacity: 0.05;
+  }
+  34% {
+    opacity: 0.28;
+  }
+  48% {
+    opacity: 0.82;
+  }
+  62% {
+    opacity: 0.96;
+  }
+  78% {
+    opacity: 0.18;
+  }
+}
+
+.home-atmosphere {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 50% 36%, transparent 0 38%, rgba(74, 63, 52, 0.12) 78%, rgba(34, 28, 23, 0.28) 100%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.16), transparent 34%, rgba(120, 105, 88, 0.16));
+  mix-blend-mode: multiply;
+  opacity: 0;
+  animation: home-reveal 900ms ease 4.2s forwards;
+}
+
+.home-atmosphere::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  opacity: 0.13;
+  background-image:
+    radial-gradient(circle at 20% 30%, rgba(17, 17, 17, 0.22) 0 1px, transparent 1.5px),
+    radial-gradient(circle at 78% 62%, rgba(255, 255, 255, 0.28) 0 1px, transparent 1.5px);
+  background-size: 34px 34px, 48px 48px;
+}
+
+.home-loading-label {
+  position: absolute;
+  left: 50%;
+  top: 47%;
+  z-index: 6;
+  width: max-content;
+  color: rgba(17, 17, 17, 0.62);
+  font-size: 0.72rem;
+  letter-spacing: 0.42em;
+  pointer-events: none;
+  text-transform: uppercase;
+  transform: translate(-50%, -50%);
+  animation: home-loading-out 650ms ease 3.9s forwards;
+}
+
 .home-ui {
   position: absolute;
   inset: 0;
@@ -78,10 +197,25 @@ body {
   gap: 1.75rem;
   padding: 28px 34px 26px;
   pointer-events: none;
+  opacity: 0;
+  animation: home-reveal 900ms ease 4.3s forwards;
 }
 
 .home-ui > * {
   pointer-events: auto;
+}
+
+@keyframes home-reveal {
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes home-loading-out {
+  to {
+    opacity: 0;
+    visibility: hidden;
+  }
 }
 
 .home-navlink,
@@ -132,76 +266,12 @@ body {
   font-size: 15px;
 }
 
-.spiral-loader {
-  position: fixed;
-  inset: 0;
-  z-index: 50;
-  overflow: hidden;
-  background:
-    radial-gradient(circle at 20% 20%, rgba(215, 181, 135, 0.14), transparent 24%),
-    radial-gradient(circle at 80% 30%, rgba(125, 145, 194, 0.14), transparent 22%),
-    linear-gradient(180deg, #020202 0%, #060606 48%, #030303 100%);
-  transition:
-    opacity 900ms ease,
-    visibility 900ms ease;
-}
-
-.spiral-loader--hidden {
-  opacity: 0;
-  visibility: hidden;
-  pointer-events: none;
-}
-
-.spiral-loader__veil {
-  position: absolute;
-  inset: 0;
-  background:
-    radial-gradient(circle at center, transparent 0 18%, rgba(0, 0, 0, 0.15) 38%, rgba(0, 0, 0, 0.78) 100%);
-}
-
-.spiral-loader__core {
-  position: absolute;
-  left: 50%;
-  bottom: 2rem;
-  z-index: 2;
-  width: calc(100vw - 2rem);
-  text-align: center;
-  transform: translateX(-50%);
-  pointer-events: none;
-}
-
-.spiral-loader__status {
-  margin: 0;
-  color: rgba(244, 239, 230, 0.62);
-  font-size: 0.72rem;
-  text-transform: uppercase;
-  letter-spacing: 0.42em;
-}
-
-.spiral-loader__scene {
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-}
-
-.spiral-loader__scene canvas {
-  display: block;
-  width: 100%;
-  height: 100%;
-}
-
 @media (max-width: 640px) {
-  .spiral-loader__status {
+  .home-loading-label {
     letter-spacing: 0.3em;
   }
 
   .home-ui {
     padding: 18px;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .spiral-loader {
-    transition: none;
   }
 }

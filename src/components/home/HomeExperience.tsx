@@ -2,7 +2,6 @@
 
 import { useMemo, useState } from "react";
 
-import FeaturedPosterPanel from "./FeaturedPosterPanel";
 import HomeHero from "./HomeHero";
 import HomeScene from "./HomeScene";
 import HomeTopBar from "./HomeTopBar";
@@ -10,7 +9,7 @@ import { posters } from "./homeData";
 
 export default function HomeExperience() {
   const [query, setQuery] = useState("");
-  const [activePosterId, setActivePosterId] = useState<number | null>(posters[0]?.id ?? null);
+  const [activePosterId] = useState<number | null>(posters[0]?.id ?? null);
 
   const filteredPosters = useMemo(() => {
     const normalized = query.trim().toLowerCase();
@@ -32,18 +31,17 @@ export default function HomeExperience() {
 
   return (
     <main className="home-shell">
-      <HomeScene posters={posters} activePosterId={visibleActivePosterId} />
+      <HomeScene posters={visiblePosters} activePosterId={visibleActivePosterId} />
+      <div className="home-loading-label" aria-hidden="true">
+        Loading...
+      </div>
+      <div className="home-atmosphere" aria-hidden="true" />
 
       <div className="home-ui">
-        <HomeTopBar query={query} onQueryChange={setQuery} />
+        <HomeTopBar />
 
         <div className="flex min-h-[56vh] flex-col items-start justify-between gap-7 lg:flex-row lg:items-end">
           <HomeHero count={filteredPosters.length || posters.length} />
-          <FeaturedPosterPanel
-            posters={visiblePosters}
-            activePosterId={visibleActivePosterId}
-            onActivePosterChange={setActivePosterId}
-          />
         </div>
 
         <div className="flex items-end justify-between gap-5">
