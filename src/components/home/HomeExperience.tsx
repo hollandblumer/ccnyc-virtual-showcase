@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 
 import HomeHero from "./HomeHero";
+import HomeInvertMask from "./HomeInvertMask";
 import HomeScene from "./HomeScene";
 import HomeTopBar from "./HomeTopBar";
 import { posters } from "./homeData";
@@ -28,12 +29,15 @@ export default function HomeExperience() {
   )
     ? activePosterId
     : (visiblePosters[0]?.id ?? null);
+  const featuredPosters = visiblePosters.slice(0, 4);
 
   return (
     <main className="home-shell">
+      <HomeInvertMask />
       <HomeScene posters={visiblePosters} activePosterId={visibleActivePosterId} />
       <div className="home-loading-label" aria-hidden="true">
-        Loading...
+        <span className="home-loading-brand">Creative Coding NYC</span>
+        <span>Loading...</span>
       </div>
       <div className="home-atmosphere" aria-hidden="true" />
 
@@ -42,10 +46,30 @@ export default function HomeExperience() {
 
         <div className="flex min-h-[56vh] flex-col items-start justify-between gap-7 lg:flex-row lg:items-end">
           <HomeHero count={filteredPosters.length || posters.length} />
+          <section className="home-featured-panel" aria-label="Featured this week">
+            <h2 className="home-invert-text" data-invert-text="Featured this week">
+              Featured this week
+            </h2>
+            <div className="home-featured-grid">
+              {featuredPosters.map((poster) => (
+                <article className="home-featured-poster" key={poster.id}>
+                  <div
+                    aria-label={`${poster.title} by ${poster.artist}`}
+                    className="home-featured-poster-image"
+                    role="img"
+                    style={{ backgroundImage: `url(${poster.imageUrl})` }}
+                  />
+                </article>
+              ))}
+            </div>
+          </section>
         </div>
 
         <div className="flex items-end justify-between gap-5">
-          <div className="text-[14px] font-medium lowercase tracking-[0.08em] text-black/75">
+          <div
+            className="home-invert-text text-[14px] font-medium lowercase tracking-[0.08em] opacity-75"
+            data-invert-text="scroll to discover ↓"
+          >
             scroll to discover ↓
           </div>
           <button className="home-view-all" onClick={() => setQuery("")}>

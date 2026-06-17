@@ -32,7 +32,7 @@ html {
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-sans);
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
 :root {
@@ -66,6 +66,7 @@ body {
   overflow: hidden;
   background: var(--home-bg);
   color: var(--home-ink);
+  isolation: isolate;
 }
 
 .home-scene {
@@ -177,6 +178,10 @@ body {
   left: 50%;
   top: 47%;
   z-index: 6;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.8rem;
   width: max-content;
   color: rgba(17, 17, 17, 0.62);
   font-size: 0.72rem;
@@ -185,6 +190,14 @@ body {
   text-transform: uppercase;
   transform: translate(-50%, -50%);
   animation: home-loading-out 650ms ease 3.9s forwards;
+}
+
+.home-loading-brand {
+  color: #111111;
+  font-family: var(--font-halo), Arial, Helvetica, sans-serif;
+  font-size: clamp(20px, 2.4vw, 34px);
+  letter-spacing: 0;
+  text-transform: none;
 }
 
 .home-ui {
@@ -203,6 +216,79 @@ body {
 
 .home-ui > * {
   pointer-events: auto;
+}
+
+.home-invert-text,
+.home-invert-art {
+  color: var(--home-ink);
+}
+
+.home-invert-text {
+  position: relative;
+  display: inline-block;
+}
+
+.home-invert-text::after {
+  content: attr(data-invert-text);
+  position: absolute;
+  inset: 0;
+  color: var(--home-bg);
+  -webkit-mask-image: var(--home-invert-mask);
+  mask-image: var(--home-invert-mask);
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-size: 100vw 100vh;
+  mask-size: 100vw 100vh;
+  -webkit-text-stroke: 1px var(--home-ink);
+  pointer-events: none;
+}
+
+.home-invert-icon {
+  color: var(--home-ink);
+}
+
+.home-invert-art {
+  filter: none;
+}
+
+.home-featured-panel {
+  align-self: center;
+  width: min(30vw, 360px);
+  min-width: 280px;
+  color: var(--home-ink);
+  transform: translateY(18px);
+}
+
+.home-featured-panel h2 {
+  margin: 0 0 14px;
+  font-family: var(--font-sans);
+  font-size: clamp(24px, 2vw, 28px);
+  font-weight: 500;
+  letter-spacing: 0;
+  line-height: 1.12;
+  text-align: left;
+}
+
+.home-featured-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.home-featured-poster {
+  aspect-ratio: 3 / 4;
+  margin: 0;
+  overflow: hidden;
+  border: 1px solid rgba(17, 17, 17, 0.14);
+  background: rgba(244, 239, 231, 0.74);
+  box-shadow: 0 14px 30px rgba(32, 24, 18, 0.12);
+}
+
+.home-featured-poster-image {
+  width: 100%;
+  height: 100%;
+  background-position: center;
+  background-size: cover;
 }
 
 @keyframes home-reveal {
@@ -273,5 +359,11 @@ body {
 
   .home-ui {
     padding: 18px;
+  }
+
+  .home-featured-panel {
+    width: min(72vw, 320px);
+    min-width: 0;
+    transform: translateY(0);
   }
 }

@@ -14,7 +14,7 @@ export default function PasswordGate({
   // Prefer env var if present; fallback to a hardcoded code so your build still works
   const PASSWORD = useMemo(() => {
     const env = process.env.NEXT_PUBLIC_GALLERY_PASSWORD;
-    return (env && env.trim().length > 0 ? env : "ccnyc2026").trim();
+    return (env && env.trim().length > 0 ? env : "2026").trim();
   }, []);
 
   useEffect(() => {

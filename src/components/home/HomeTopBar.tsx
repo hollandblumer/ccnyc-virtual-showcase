@@ -4,14 +4,14 @@ export default function HomeTopBar() {
       <a
         href="#"
         aria-label="Menu"
-        className="home-brand-mark pointer-events-auto absolute left-[26px] top-[12px] inline-flex h-14 w-14 items-center justify-center text-[#111111]"
+        className="home-brand-mark home-invert-icon pointer-events-auto absolute left-[22px] top-[8px] inline-flex h-16 w-16 items-center justify-center"
       >
         <svg
           aria-hidden="true"
           fill="none"
-          height="30"
+          height="38"
           viewBox="0 0 24 24"
-          width="30"
+          width="38"
           xmlns="http://www.w3.org/2000/svg"
         >
           <path
@@ -24,8 +24,27 @@ export default function HomeTopBar() {
       </a>
 
       <a
+        aria-label="LinkedIn"
+        className="home-invert-icon pointer-events-auto absolute right-[82px] top-[11px] inline-flex h-14 w-14 items-center justify-center"
+        href="https://www.linkedin.com/"
+        rel="noreferrer"
+        target="_blank"
+      >
+        <svg
+          aria-hidden="true"
+          fill="currentColor"
+          height="34"
+          viewBox="0 0 24 24"
+          width="34"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path d="M6.94 8.86H3.76V19h3.18V8.86ZM5.35 7.48c1.02 0 1.85-.82 1.85-1.83s-.83-1.83-1.85-1.83S3.5 4.64 3.5 5.65s.83 1.83 1.85 1.83ZM20.5 13.44c0-3.05-1.63-4.47-3.8-4.47-1.75 0-2.53.96-2.97 1.64V8.86h-3.05c.04.97 0 10.14 0 10.14h3.18v-5.66c0-.3.02-.61.11-.82.23-.61.76-1.24 1.65-1.24 1.16 0 1.63.89 1.63 2.19V19h3.18l.07-5.56Z" />
+        </svg>
+      </a>
+
+      <a
         aria-label="Instagram"
-        className="pointer-events-auto absolute right-[22px] top-[17px] inline-flex h-12 w-12 items-center justify-center text-[#111111]"
+        className="home-invert-icon pointer-events-auto absolute right-[18px] top-[11px] inline-flex h-14 w-14 items-center justify-center"
         href="https://www.instagram.com/"
         rel="noreferrer"
         target="_blank"
@@ -33,9 +52,9 @@ export default function HomeTopBar() {
         <svg
           aria-hidden="true"
           fill="none"
-          height="28"
+          height="34"
           viewBox="0 0 24 24"
-          width="28"
+          width="34"
           xmlns="http://www.w3.org/2000/svg"
         >
           <rect

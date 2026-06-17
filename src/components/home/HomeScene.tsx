@@ -10,13 +10,17 @@ type HomeSceneProps = {
   activePosterId: number | null;
 };
 
-type TwistingPosterMesh = THREE.Mesh<
-  THREE.PlaneGeometry,
-  THREE.ShaderMaterial
->;
+type TwistingPosterMesh = THREE.Mesh<THREE.PlaneGeometry, THREE.ShaderMaterial>;
 
 type ArcPosterMesh = THREE.Mesh<THREE.PlaneGeometry, THREE.ShaderMaterial>;
 type OpacityMaterial = THREE.Material & { opacity: number };
+type DetachedArcPoster = {
+  arcMesh: ArcPosterMesh;
+  floatingMesh: TwistingPosterMesh;
+  start: THREE.Vector3;
+  detachStart: number;
+  detachEnd: number;
+};
 
 const TAU = Math.PI * 2;
 
@@ -147,10 +151,7 @@ function pseudoRange(seed: number, min: number, max: number) {
   return min + (max - min) * pseudoRandom(seed);
 }
 
-export default function HomeScene({
-  posters,
-  activePosterId,
-}: HomeSceneProps) {
+export default function HomeScene({ posters, activePosterId }: HomeSceneProps) {
   const mountRef = useRef<HTMLDivElement | null>(null);
   const activeRef = useRef<number | null>(activePosterId);
 
@@ -174,7 +175,10 @@ export default function HomeScene({
     );
     camera.position.set(0, 2.65, 34);
 
-    const renderer = new THREE.WebGLRenderer({ antialias: true, stencil: true });
+    const renderer = new THREE.WebGLRenderer({
+      antialias: true,
+      stencil: true,
+    });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.setSize(mountNode.clientWidth, mountNode.clientHeight);
     renderer.outputColorSpace = THREE.SRGBColorSpace;
@@ -212,37 +216,6 @@ export default function HomeScene({
     wall.position.set(0, 9, -20);
     wall.renderOrder = 0;
     scene.add(wall);
-
-    const wallTitleCanvas = document.createElement("canvas");
-    wallTitleCanvas.width = 1500;
-    wallTitleCanvas.height = 360;
-    const wallTitleContext = wallTitleCanvas.getContext("2d");
-    if (wallTitleContext) {
-      wallTitleContext.clearRect(0, 0, wallTitleCanvas.width, wallTitleCanvas.height);
-      wallTitleContext.fillStyle = "#f7f1e8";
-      wallTitleContext.fillRect(90, 76, 1320, 208);
-      wallTitleContext.fillStyle = "#111111";
-      wallTitleContext.font = "900 116px Arial, Helvetica, sans-serif";
-      wallTitleContext.textAlign = "center";
-      wallTitleContext.textBaseline = "middle";
-      wallTitleContext.letterSpacing = "6px";
-      wallTitleContext.fillText("FEATURED THIS WEEK", wallTitleCanvas.width / 2, 180);
-    }
-    const wallTitleTexture = new THREE.CanvasTexture(wallTitleCanvas);
-    wallTitleTexture.colorSpace = THREE.SRGBColorSpace;
-    wallTitleTexture.anisotropy = renderer.capabilities.getMaxAnisotropy();
-    const wallTitle = new THREE.Mesh(
-      new THREE.PlaneGeometry(14.2, 2.5),
-      new THREE.MeshBasicMaterial({
-        map: wallTitleTexture,
-        transparent: false,
-        opacity: 1,
-        depthWrite: false,
-      }),
-    );
-    wallTitle.position.set(12.8, 10.6, -6.2);
-    wallTitle.renderOrder = 2;
-    scene.add(wallTitle);
 
     const floor = new THREE.Mesh(
       new THREE.PlaneGeometry(90, 90),
@@ -339,60 +312,9 @@ export default function HomeScene({
     const floorPosterGeometry = new THREE.PlaneGeometry(3.4, 4.6);
     const twistingPosterGeometry = new THREE.PlaneGeometry(2.35, 3.3, 48, 18);
 
-    const wallGroup = new THREE.Group();
-    scene.add(wallGroup);
     const wallMeshes: THREE.Mesh[] = [];
-    const wallMounts: THREE.Mesh[] = [];
     const smallWallMeshes: THREE.Mesh[] = [];
     const leftWallMeshes: THREE.Mesh[] = [];
-    const wallPositions = [
-      [9.0, 6.35], [13.0, 6.35], [17.0, 6.35], [21.0, 6.35],
-      [9.0, 1.25], [13.0, 1.25], [17.0, 1.25], [21.0, 1.25],
-    ];
-
-    wallPositions.forEach((position, index) => {
-      const poster = posters[index % posters.length];
-      const mount = new THREE.Mesh(
-        new THREE.PlaneGeometry(3.84, 5.08),
-        new THREE.MeshStandardMaterial({
-          color: 0xf8f2e9,
-          roughness: 0.95,
-          metalness: 0,
-          transparent: true,
-          opacity: 1,
-          polygonOffset: true,
-          polygonOffsetFactor: -2,
-          polygonOffsetUnits: -2,
-        }),
-      );
-      mount.position.set(position[0] + 0.06, position[1] - 0.08, -19.72);
-      mount.rotation.z = (pseudoRandom(index + 130) - 0.5) * 0.018;
-      mount.renderOrder = 1;
-      mount.receiveShadow = true;
-      wallMounts.push(mount);
-      wallGroup.add(mount);
-
-      const mesh = new THREE.Mesh(
-        wallPosterGeometry,
-        new THREE.MeshStandardMaterial({
-          map: textureByPosterId.get(poster.id),
-          roughness: 0.92,
-          metalness: 0,
-          transparent: true,
-          opacity: 1,
-          polygonOffset: true,
-          polygonOffsetFactor: -4,
-          polygonOffsetUnits: -4,
-        }),
-      );
-      mesh.position.set(position[0], position[1], -19.48 + pseudoRandom(index + 100) * 0.018);
-      mesh.rotation.z = mount.rotation.z;
-      mesh.renderOrder = 2;
-      mesh.castShadow = true;
-      mesh.userData.posterId = poster.id;
-      wallMeshes.push(mesh);
-      wallGroup.add(mesh);
-    });
 
     const smallWallPosterData = [
       { x: -17.8, y: 10.7, scale: 1.2, rotation: -0.16, posterOffset: 2 },
@@ -402,28 +324,7 @@ export default function HomeScene({
       { x: 3.1, y: 11.85, scale: 0.9, rotation: -0.12, posterOffset: 5 },
     ];
 
-    smallWallPosterData.forEach((entry, index) => {
-      const poster = posters[(entry.posterOffset + index) % posters.length];
-      const mesh = new THREE.Mesh(
-        smallWallPosterGeometry,
-        new THREE.MeshStandardMaterial({
-          map: textureByPosterId.get(poster.id),
-          roughness: 0.96,
-          metalness: 0,
-          transparent: true,
-          opacity: 0.92,
-          polygonOffset: true,
-          polygonOffsetFactor: -3,
-          polygonOffsetUnits: -3,
-        }),
-      );
-      mesh.position.set(entry.x, entry.y, -19.55 + pseudoRandom(index + 1500) * 0.025);
-      mesh.rotation.z = entry.rotation;
-      mesh.scale.setScalar(entry.scale);
-      mesh.renderOrder = 2;
-      smallWallMeshes.push(mesh);
-      wallGroup.add(mesh);
-    });
+    // Removed back-plane small wall poster images.
 
     const leftWallPosterData = [
       { x: -21.5, y: 7.0, scale: 1.28, rotation: -0.52, posterOffset: 3 },
@@ -431,27 +332,7 @@ export default function HomeScene({
       { x: -14.9, y: 11.0, scale: 0.92, rotation: -0.22, posterOffset: 1 },
     ];
 
-    leftWallPosterData.forEach((entry, index) => {
-      const poster = posters[(entry.posterOffset + index) % posters.length];
-      const mat = new THREE.MeshStandardMaterial({
-        map: textureByPosterId.get(poster.id),
-        roughness: 0.96,
-        metalness: 0,
-        transparent: true,
-        opacity: 0.94,
-        polygonOffset: true,
-        polygonOffsetFactor: -5,
-        polygonOffsetUnits: -5,
-      });
-      const mesh = new THREE.Mesh(leftWallPosterGeometry, mat);
-      mesh.position.set(entry.x, entry.y, -19.42 + pseudoRandom(index + 1560) * 0.035);
-      mesh.rotation.z = entry.rotation;
-      mesh.scale.setScalar(entry.scale);
-      mesh.renderOrder = 3;
-      mesh.castShadow = true;
-      leftWallMeshes.push(mesh);
-      wallGroup.add(mesh);
-    });
+    // Removed back-plane left wall poster images.
 
     const floorGroup = new THREE.Group();
     scene.add(floorGroup);
@@ -518,16 +399,12 @@ export default function HomeScene({
       const reclined = index === 1;
       const pitch = reclined
         ? -Math.PI / 2 + (pseudoRandom(index + 750) - 0.5) * 0.38
-        : (pseudoRandom(index + 750) - 0.5) * 0.5;
+        : (pseudoRandom(index + 750) - 0.5) * 0.7;
       const yaw = reclined
         ? side * (0.08 + pseudoRandom(index + 780) * 0.16)
-        : side * (0.18 + pseudoRandom(index + 780) * 0.28);
+        : side * (0.28 + pseudoRandom(index + 780) * 0.36);
       mesh.position.set(position[0], position[1], position[2]);
-      mesh.rotation.set(
-        pitch,
-        yaw,
-        (pseudoRandom(index + 810) - 0.5) * 0.42,
-      );
+      mesh.rotation.set(pitch, yaw, (pseudoRandom(index + 810) - 0.5) * 0.64);
       mesh.scale.setScalar(1.12 + pseudoRandom(index + 840) * 0.26);
       mesh.renderOrder = 5;
       mesh.castShadow = true;
@@ -552,10 +429,39 @@ export default function HomeScene({
     scene.add(sculptureGroup);
     const arcPosterGeometry = new THREE.PlaneGeometry(1, 1, 40, 24);
     const arcPosters: ArcPosterMesh[] = [];
-    let detachedArcPoster: ArcPosterMesh | null = null;
-    let detachedFloatingPoster: TwistingPosterMesh | null = null;
-    let secondDetachedArcPoster: ArcPosterMesh | null = null;
-    let secondDetachedFloatingPoster: TwistingPosterMesh | null = null;
+    const detachedArcPosters: DetachedArcPoster[] = [];
+    const detachedPosterConfigs = [
+      {
+        arcIndex: 4,
+        start: new THREE.Vector3(-2.2, 11.7, -1.55),
+        base: new THREE.Vector3(-6.4, 15.25, -0.8),
+        rotation: new THREE.Euler(-0.18, -0.22, 1.8),
+        scale: 1.44,
+        detachStart: 7.0,
+        detachEnd: 8.9,
+        phaseSeed: 1880,
+        motionSeed: 1900,
+        verticalAmp: 0.5,
+        horizontalAmp: 0.3,
+        depthAmp: 0.34,
+        tiltAmp: 0.085,
+      },
+      {
+        arcIndex: 13,
+        start: new THREE.Vector3(2.2, 11.5, -1.55),
+        base: new THREE.Vector3(5.6, 14.45, -1.1),
+        rotation: new THREE.Euler(-0.12, 0.24, -1.65),
+        scale: 1.43,
+        detachStart: 9.8,
+        detachEnd: 11.7,
+        phaseSeed: 2000,
+        motionSeed: 2020,
+        verticalAmp: 0.48,
+        horizontalAmp: 0.3,
+        depthAmp: 0.34,
+        tiltAmp: 0.082,
+      },
+    ];
     const arcStart = Math.PI * 0.2;
     const arcEnd = Math.PI * 1.8;
     const layerCount = 70;
@@ -572,7 +478,28 @@ export default function HomeScene({
       for (let i = 0; i < posterCount; i += 1) {
         const arcT = i / (posterCount - 1);
         const thetaCenter = arcStart + shift + (arcEnd - arcStart) * arcT;
-        const texture = textures[(layer * 3 + i) % textures.length];
+        const texture =
+          layer === 0 && i === 3
+            ? textures[8]
+            : layer === 0 && i === 4
+              ? textures[9]
+              : layer === 0 && i === 5
+                ? textures[10]
+                : layer === 0 && i === 6
+                  ? textures[11]
+                  : layer === 0 && i === 7
+                    ? textures[12]
+                    : layer === 0 && i === 8
+                      ? textures[13]
+                      : layer === 0 && i === 9
+                        ? textures[14]
+                        : layer === 0 && i === 10
+                          ? textures[15]
+                          : layer === 0 && i === 11
+                            ? textures[16]
+                            : layer === 0 && i === 12
+                              ? textures[17]
+                              : textures[(layer * 3 + i) % textures.length];
         const material = new THREE.ShaderMaterial({
           vertexShader: ARC_POSTER_VERTEX_SHADER,
           fragmentShader: ARC_POSTER_FRAGMENT_SHADER,
@@ -603,7 +530,10 @@ export default function HomeScene({
           side: THREE.DoubleSide,
           transparent: true,
         });
-        const mesh = new THREE.Mesh(arcPosterGeometry, material) as ArcPosterMesh;
+        const mesh = new THREE.Mesh(
+          arcPosterGeometry,
+          material,
+        ) as ArcPosterMesh;
         mesh.rotation.set(
           pseudoRange(layer * 97 + i + 2300, -0.03, 0.03),
           pseudoRange(layer * 97 + i + 2400, -0.03, 0.03),
@@ -611,85 +541,55 @@ export default function HomeScene({
         );
         mesh.renderOrder = 4;
         mesh.castShadow = true;
-        if (layer === 0 && i === 4) {
-          detachedArcPoster = mesh;
-
+        const detachedConfig = detachedPosterConfigs.find(
+          (config) => layer === 0 && config.arcIndex === i,
+        );
+        if (detachedConfig) {
           const detachedMaterial = new THREE.ShaderMaterial({
             vertexShader: TWISTING_POSTER_VERTEX_SHADER,
             fragmentShader: TWISTING_POSTER_FRAGMENT_SHADER,
             uniforms: {
               tMap: { value: texture },
               uTime: { value: 0 },
-              uPhase: { value: pseudoRandom(1880) * Math.PI * 2 },
+              uPhase: {
+                value: pseudoRandom(detachedConfig.phaseSeed) * Math.PI * 2,
+              },
               uSpeed: { value: 0 },
               uOpacity: { value: 0 },
             },
             side: THREE.DoubleSide,
             transparent: true,
           });
-          detachedFloatingPoster = new THREE.Mesh(
+          const detachedFloatingPoster = new THREE.Mesh(
             twistingPosterGeometry,
             detachedMaterial,
           ) as TwistingPosterMesh;
-          detachedFloatingPoster.position.set(-2.2, 11.7, -1.55);
-          detachedFloatingPoster.rotation.set(-0.18, -0.22, 1.8);
-          detachedFloatingPoster.scale.setScalar(1.15);
+          detachedFloatingPoster.position.copy(detachedConfig.start);
+          detachedFloatingPoster.rotation.copy(detachedConfig.rotation);
+          detachedFloatingPoster.scale.setScalar(detachedConfig.scale);
           detachedFloatingPoster.renderOrder = 6;
           detachedFloatingPoster.castShadow = true;
           detachedFloatingPoster.userData = {
-            baseX: -8.8,
-            baseY: 10.1,
-            baseZ: -2.6,
-            pitchBase: -0.18,
-            yawBase: -0.22,
-            rollBase: 1.8,
-            phase: pseudoRandom(1900) * Math.PI * 2,
-            verticalAmp: 0.52,
-            horizontalAmp: 0.34,
-            depthAmp: 0.42,
-            tiltAmp: 0.075,
+            baseX: detachedConfig.base.x,
+            baseY: detachedConfig.base.y,
+            baseZ: detachedConfig.base.z,
+            pitchBase: detachedConfig.rotation.x,
+            yawBase: detachedConfig.rotation.y,
+            rollBase: detachedConfig.rotation.z,
+            phase: pseudoRandom(detachedConfig.motionSeed) * Math.PI * 2,
+            verticalAmp: detachedConfig.verticalAmp,
+            horizontalAmp: detachedConfig.horizontalAmp,
+            depthAmp: detachedConfig.depthAmp,
+            tiltAmp: detachedConfig.tiltAmp,
           };
-          twistingPosterGroup.add(detachedFloatingPoster);
-        }
-        if (layer === 0 && i === 13) {
-          secondDetachedArcPoster = mesh;
-
-          const detachedMaterial = new THREE.ShaderMaterial({
-            vertexShader: TWISTING_POSTER_VERTEX_SHADER,
-            fragmentShader: TWISTING_POSTER_FRAGMENT_SHADER,
-            uniforms: {
-              tMap: { value: texture },
-              uTime: { value: 0 },
-              uPhase: { value: pseudoRandom(1980) * Math.PI * 2 },
-              uSpeed: { value: 0 },
-              uOpacity: { value: 0 },
-            },
-            side: THREE.DoubleSide,
-            transparent: true,
+          detachedArcPosters.push({
+            arcMesh: mesh,
+            floatingMesh: detachedFloatingPoster,
+            start: detachedConfig.start,
+            detachStart: detachedConfig.detachStart,
+            detachEnd: detachedConfig.detachEnd,
           });
-          secondDetachedFloatingPoster = new THREE.Mesh(
-            twistingPosterGeometry,
-            detachedMaterial,
-          ) as TwistingPosterMesh;
-          secondDetachedFloatingPoster.position.set(2.2, 11.5, -1.55);
-          secondDetachedFloatingPoster.rotation.set(-0.12, 0.24, -1.65);
-          secondDetachedFloatingPoster.scale.setScalar(1.12);
-          secondDetachedFloatingPoster.renderOrder = 6;
-          secondDetachedFloatingPoster.castShadow = true;
-          secondDetachedFloatingPoster.userData = {
-            baseX: 8.8,
-            baseY: 9.75,
-            baseZ: -2.7,
-            pitchBase: -0.12,
-            yawBase: 0.24,
-            rollBase: -1.65,
-            phase: pseudoRandom(2000) * Math.PI * 2,
-            verticalAmp: 0.48,
-            horizontalAmp: 0.32,
-            depthAmp: 0.38,
-            tiltAmp: 0.07,
-          };
-          twistingPosterGroup.add(secondDetachedFloatingPoster);
+          twistingPosterGroup.add(detachedFloatingPoster);
         }
         arcPosters.push(mesh);
         sculptureGroup.add(mesh);
@@ -705,9 +605,17 @@ export default function HomeScene({
           uniforms: {
             tMap: { value: textures[(endIndex * 5 + k) % textures.length] },
             uTime: { value: 0 },
-            uThetaCenter: { value: theta + pseudoRange(seed + 2600, -0.03, 0.03) },
+            uThetaCenter: {
+              value: theta + pseudoRange(seed + 2600, -0.03, 0.03),
+            },
             uThetaSpan: { value: pseudoRange(seed + 2700, 0.12, 0.18) },
-            uRadius: { value: pseudoRange(seed + 2800, outerRadius - 0.08, outerRadius + 0.05) },
+            uRadius: {
+              value: pseudoRange(
+                seed + 2800,
+                outerRadius - 0.08,
+                outerRadius + 0.05,
+              ),
+            },
             uWidth: { value: pseudoRange(seed + 2900, 1.0, 1.4) },
             uCupDepth: { value: pseudoRange(seed + 3000, 0.35, 0.52) },
             uFlutter: { value: pseudoRange(seed + 3100, 0.95, 1.2) },
@@ -721,7 +629,10 @@ export default function HomeScene({
           side: THREE.DoubleSide,
           transparent: true,
         });
-        const mesh = new THREE.Mesh(arcPosterGeometry, material) as ArcPosterMesh;
+        const mesh = new THREE.Mesh(
+          arcPosterGeometry,
+          material,
+        ) as ArcPosterMesh;
         mesh.rotation.set(
           pseudoRange(seed + 3500, -0.08, 0.08),
           pseudoRange(seed + 3600, -0.08, 0.08),
@@ -743,7 +654,9 @@ export default function HomeScene({
       baseOpacity: number;
     }> = [];
 
-    const registerRevealMaterial = (material: THREE.Material | THREE.Material[]) => {
+    const registerRevealMaterial = (
+      material: THREE.Material | THREE.Material[],
+    ) => {
       if (Array.isArray(material)) {
         material.forEach(registerRevealMaterial);
         return;
@@ -758,30 +671,27 @@ export default function HomeScene({
       revealMaterials.push({ material: opacityMaterial, baseOpacity });
     };
 
-    [
-      wall,
-      wallTitle,
-      floor,
-      sculptureShadow,
-      spillGroup,
-      dust,
-      wallGroup,
-      floorGroup,
-    ].forEach((object) => {
-      object.traverse((child) => {
-        if (child instanceof THREE.Mesh || child instanceof THREE.Points) {
-          registerRevealMaterial(child.material);
-        }
-      });
-    });
+    [wall, floor, sculptureShadow, spillGroup, dust, floorGroup].forEach(
+      (object) => {
+        object.traverse((child) => {
+          if (child instanceof THREE.Mesh || child instanceof THREE.Points) {
+            registerRevealMaterial(child.material);
+          }
+        });
+      },
+    );
 
     const clock = new THREE.Clock();
 
     const handleResize = () => {
       if (!mountRef.current) return;
-      camera.aspect = mountRef.current.clientWidth / mountRef.current.clientHeight;
+      camera.aspect =
+        mountRef.current.clientWidth / mountRef.current.clientHeight;
       camera.updateProjectionMatrix();
-      renderer.setSize(mountRef.current.clientWidth, mountRef.current.clientHeight);
+      renderer.setSize(
+        mountRef.current.clientWidth,
+        mountRef.current.clientHeight,
+      );
     };
 
     window.addEventListener("resize", handleResize);
@@ -794,8 +704,6 @@ export default function HomeScene({
 
       const surroundingsReveal = THREE.MathUtils.smoothstep(t, 3.75, 5.45);
       wall.visible = surroundingsReveal > 0.01;
-      wallGroup.visible = surroundingsReveal > 0.01;
-      wallTitle.visible = surroundingsReveal > 0.01;
       dust.visible = surroundingsReveal > 0.01;
       floor.visible = surroundingsReveal > 0.01;
       floorGroup.visible = surroundingsReveal > 0.01;
@@ -808,21 +716,26 @@ export default function HomeScene({
       twistingPosters.forEach((mesh) => {
         const drift = t * 0.62 + mesh.userData.phase;
         mesh.position.x =
-          mesh.userData.baseX + Math.cos(drift * 0.85) * mesh.userData.horizontalAmp;
+          mesh.userData.baseX +
+          Math.cos(drift * 0.85) * mesh.userData.horizontalAmp;
         mesh.position.y =
           mesh.userData.baseY + Math.sin(drift) * mesh.userData.verticalAmp;
         mesh.position.z =
           mesh.userData.baseZ + Math.cos(drift * 0.7) * mesh.userData.depthAmp;
         mesh.rotation.x =
-          mesh.userData.pitchBase + Math.sin(drift * 0.9) * mesh.userData.tiltAmp;
+          mesh.userData.pitchBase +
+          Math.sin(drift * 0.9) * mesh.userData.tiltAmp;
         mesh.rotation.y =
-          mesh.userData.yawBase + Math.sin(drift * 0.58) * mesh.userData.tiltAmp;
+          mesh.userData.yawBase +
+          Math.sin(drift * 0.58) * mesh.userData.tiltAmp;
         mesh.rotation.z =
-          mesh.userData.rollBase + Math.cos(drift * 0.72) * mesh.userData.tiltAmp;
+          mesh.userData.rollBase +
+          Math.cos(drift * 0.72) * mesh.userData.tiltAmp;
         mesh.material.uniforms.uTime.value = t;
-        mesh.material.uniforms.uSpeed.value = 0.32 + Math.sin(drift * 1.2) * 0.12;
-        mesh.material.uniforms.uOpacity.value = (0.98 - Math.sin(drift) * 0.04) *
-          surroundingsReveal;
+        mesh.material.uniforms.uSpeed.value =
+          0.32 + Math.sin(drift * 1.2) * 0.12;
+        mesh.material.uniforms.uOpacity.value =
+          (0.98 - Math.sin(drift) * 0.04) * surroundingsReveal;
       });
 
       wallMeshes.forEach((mesh) => {
@@ -842,76 +755,67 @@ export default function HomeScene({
         mesh.material.uniforms.uTime.value = t;
         mesh.material.uniforms.uTransition.value = cTransition;
       });
-      if (detachedArcPoster) {
-        const detachProgress = THREE.MathUtils.smoothstep(t, 7.2, 9.2);
-        detachedArcPoster.material.uniforms.uOpacity.value = 1 - detachProgress;
-      }
-      if (detachedFloatingPoster) {
-        const detachProgress = THREE.MathUtils.smoothstep(t, 7.2, 9.2);
-        const drift = t * 0.62 + detachedFloatingPoster.userData.phase;
-        const targetX = detachedFloatingPoster.userData.baseX +
-          Math.cos(drift * 0.85) * detachedFloatingPoster.userData.horizontalAmp;
-        const targetY = detachedFloatingPoster.userData.baseY +
-          Math.sin(drift) * detachedFloatingPoster.userData.verticalAmp;
-        const targetZ = detachedFloatingPoster.userData.baseZ +
-          Math.cos(drift * 0.7) * detachedFloatingPoster.userData.depthAmp;
-        detachedFloatingPoster.position.x = THREE.MathUtils.lerp(-2.2, targetX, detachProgress);
-        detachedFloatingPoster.position.y = THREE.MathUtils.lerp(11.7, targetY, detachProgress);
-        detachedFloatingPoster.position.z = THREE.MathUtils.lerp(-1.55, targetZ, detachProgress);
-        detachedFloatingPoster.rotation.x =
-          detachedFloatingPoster.userData.pitchBase +
-          Math.sin(drift * 0.9) * detachedFloatingPoster.userData.tiltAmp;
-        detachedFloatingPoster.rotation.y =
-          detachedFloatingPoster.userData.yawBase +
-          Math.sin(drift * 0.58) * detachedFloatingPoster.userData.tiltAmp;
-        detachedFloatingPoster.rotation.z =
-          detachedFloatingPoster.userData.rollBase +
-          Math.cos(drift * 0.72) * detachedFloatingPoster.userData.tiltAmp;
-        detachedFloatingPoster.material.uniforms.uTime.value = t;
-        detachedFloatingPoster.material.uniforms.uSpeed.value =
-          (0.32 + Math.sin(drift * 1.2) * 0.12) * detachProgress;
-        detachedFloatingPoster.material.uniforms.uOpacity.value = detachProgress * surroundingsReveal;
-      }
-      if (secondDetachedArcPoster) {
-        const detachProgress = THREE.MathUtils.smoothstep(t, 12.2, 14.2);
-        secondDetachedArcPoster.material.uniforms.uOpacity.value = 1 - detachProgress;
-      }
-      if (secondDetachedFloatingPoster) {
-        const detachProgress = THREE.MathUtils.smoothstep(t, 12.2, 14.2);
-        const drift = t * 0.62 + secondDetachedFloatingPoster.userData.phase;
-        const targetX = secondDetachedFloatingPoster.userData.baseX +
-          Math.cos(drift * 0.85) * secondDetachedFloatingPoster.userData.horizontalAmp;
-        const targetY = secondDetachedFloatingPoster.userData.baseY +
-          Math.sin(drift) * secondDetachedFloatingPoster.userData.verticalAmp;
-        const targetZ = secondDetachedFloatingPoster.userData.baseZ +
-          Math.cos(drift * 0.7) * secondDetachedFloatingPoster.userData.depthAmp;
-        secondDetachedFloatingPoster.position.x = THREE.MathUtils.lerp(2.2, targetX, detachProgress);
-        secondDetachedFloatingPoster.position.y = THREE.MathUtils.lerp(11.5, targetY, detachProgress);
-        secondDetachedFloatingPoster.position.z = THREE.MathUtils.lerp(-1.55, targetZ, detachProgress);
-        secondDetachedFloatingPoster.rotation.x =
-          secondDetachedFloatingPoster.userData.pitchBase +
-          Math.sin(drift * 0.9) * secondDetachedFloatingPoster.userData.tiltAmp;
-        secondDetachedFloatingPoster.rotation.y =
-          secondDetachedFloatingPoster.userData.yawBase +
-          Math.sin(drift * 0.58) * secondDetachedFloatingPoster.userData.tiltAmp;
-        secondDetachedFloatingPoster.rotation.z =
-          secondDetachedFloatingPoster.userData.rollBase +
-          Math.cos(drift * 0.72) * secondDetachedFloatingPoster.userData.tiltAmp;
-        secondDetachedFloatingPoster.material.uniforms.uTime.value = t;
-        secondDetachedFloatingPoster.material.uniforms.uSpeed.value =
-          (0.32 + Math.sin(drift * 1.2) * 0.12) * detachProgress;
-        secondDetachedFloatingPoster.material.uniforms.uOpacity.value =
-          detachProgress * surroundingsReveal;
-      }
+      detachedArcPosters.forEach(
+        ({ arcMesh, floatingMesh, start, detachStart, detachEnd }) => {
+          const detachProgress = THREE.MathUtils.smoothstep(
+            t,
+            detachStart,
+            detachEnd,
+          );
+          const drift = t * 0.62 + floatingMesh.userData.phase;
+          const targetX =
+            floatingMesh.userData.baseX +
+            Math.cos(drift * 0.85) * floatingMesh.userData.horizontalAmp;
+          const targetY =
+            floatingMesh.userData.baseY +
+            Math.sin(drift) * floatingMesh.userData.verticalAmp;
+          const targetZ =
+            floatingMesh.userData.baseZ +
+            Math.cos(drift * 0.7) * floatingMesh.userData.depthAmp;
+
+          arcMesh.material.uniforms.uOpacity.value = 1 - detachProgress;
+          floatingMesh.position.x = THREE.MathUtils.lerp(
+            start.x,
+            targetX,
+            detachProgress,
+          );
+          floatingMesh.position.y = THREE.MathUtils.lerp(
+            start.y,
+            targetY,
+            detachProgress,
+          );
+          floatingMesh.position.z = THREE.MathUtils.lerp(
+            start.z,
+            targetZ,
+            detachProgress,
+          );
+          floatingMesh.rotation.x =
+            floatingMesh.userData.pitchBase +
+            Math.sin(drift * 0.9) * floatingMesh.userData.tiltAmp;
+          floatingMesh.rotation.y =
+            floatingMesh.userData.yawBase +
+            Math.sin(drift * 0.58) * floatingMesh.userData.tiltAmp;
+          floatingMesh.rotation.z =
+            floatingMesh.userData.rollBase +
+            Math.cos(drift * 0.72) * floatingMesh.userData.tiltAmp;
+          floatingMesh.material.uniforms.uTime.value = t;
+          floatingMesh.material.uniforms.uSpeed.value =
+            (0.36 + Math.sin(drift * 1.2) * 0.14) * detachProgress;
+          floatingMesh.material.uniforms.uOpacity.value =
+            detachProgress * surroundingsReveal;
+        },
+      );
       const introLift = (1 - THREE.MathUtils.smoothstep(t, 0, 4.2)) * 0.35;
       sculptureGroup.position.y = 2.65 + introLift + Math.sin(t * 0.9) * 0.12;
       const introSpin = 1 - THREE.MathUtils.smoothstep(t, 0, 4.0);
-      sculptureGroup.rotation.z = introSpin * Math.PI * 2.15 +
-        Math.sin(t * 0.3) * 0.015;
+      sculptureGroup.rotation.z =
+        introSpin * Math.PI * 2.15 + Math.sin(t * 0.3) * 0.015;
 
       camera.position.x = 0;
       camera.position.y = 2.78 + Math.cos(t * 0.18) * 0.04;
-      const introPush = Math.sin(THREE.MathUtils.smoothstep(t, 0, 4.0) * Math.PI);
+      const introPush = Math.sin(
+        THREE.MathUtils.smoothstep(t, 0, 4.0) * Math.PI,
+      );
       camera.position.z = 39 - introPush * 5;
       camera.lookAt(0, 2.75, -1.2);
 
@@ -924,9 +828,6 @@ export default function HomeScene({
       window.cancelAnimationFrame(frameId);
       window.removeEventListener("resize", handleResize);
       textures.forEach((texture) => texture.dispose());
-      wallTitle.geometry.dispose();
-      wallTitleTexture.dispose();
-      (wallTitle.material as THREE.Material).dispose();
       sculptureShadow.geometry.dispose();
       (sculptureShadow.material as THREE.Material).dispose();
       dustGeometry.dispose();
@@ -937,10 +838,6 @@ export default function HomeScene({
       twistingPosterGeometry.dispose();
       arcPosterGeometry.dispose();
       wallMeshes.forEach((mesh) => {
-        (mesh.material as THREE.Material).dispose();
-      });
-      wallMounts.forEach((mesh) => {
-        mesh.geometry.dispose();
         (mesh.material as THREE.Material).dispose();
       });
       smallWallMeshes.forEach((mesh) => {
@@ -955,8 +852,9 @@ export default function HomeScene({
       twistingPosters.forEach((mesh) => {
         mesh.material.dispose();
       });
-      detachedFloatingPoster?.material.dispose();
-      secondDetachedFloatingPoster?.material.dispose();
+      detachedArcPosters.forEach(({ floatingMesh }) => {
+        floatingMesh.material.dispose();
+      });
       arcPosters.forEach((mesh) => {
         mesh.material.dispose();
       });

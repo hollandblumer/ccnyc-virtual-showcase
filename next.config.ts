@@ -1,9 +1,9 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // output: "export",               <-- Disable for now
-  // basePath: "/ccnyc-virtual-showcase", <-- Disable for now
-  // assetPrefix: "/ccnyc-virtual-showcase/", <-- Disable for now
+  output: "export",
+  trailingSlash: true,
+  assetPrefix: "./",
   images: {
     unoptimized: true,
   },
