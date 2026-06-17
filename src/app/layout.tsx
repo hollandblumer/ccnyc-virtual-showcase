@@ -3,7 +3,6 @@ import { Bungee, Manrope } from "next/font/google";
 import localFont from "next/font/local";
 
 import "./globals.css";
-import PasswordGate from "@/components/PasswordGate"; // Path should work now
 
 const manrope = Manrope({
   subsets: ["latin"],
@@ -41,7 +40,7 @@ export default function RootLayout({
       <body
         className={`${manrope.variable} ${bungee.variable} ${svnGilroySemiBold.variable} ${goliSemiBold.variable} ${haloGrotesk.variable}`}
       >
-        <PasswordGate>{children}</PasswordGate>
+        {children}
       </body>
     </html>
   );

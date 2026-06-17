@@ -159,7 +159,7 @@ body {
     linear-gradient(180deg, rgba(255, 255, 255, 0.16), transparent 34%, rgba(120, 105, 88, 0.16));
   mix-blend-mode: multiply;
   opacity: 0;
-  animation: home-reveal 900ms ease 4.2s forwards;
+  animation: home-reveal 700ms ease 1.7s forwards;
 }
 
 .home-atmosphere::after {
@@ -189,7 +189,7 @@ body {
   pointer-events: none;
   text-transform: uppercase;
   transform: translate(-50%, -50%);
-  animation: home-loading-out 650ms ease 3.9s forwards;
+  animation: home-loading-out 420ms ease 1.25s forwards;
 }
 
 .home-loading-brand {
@@ -211,7 +211,7 @@ body {
   padding: 28px 34px 26px;
   pointer-events: none;
   opacity: 0;
-  animation: home-reveal 900ms ease 4.3s forwards;
+  animation: home-reveal 700ms ease 1.85s forwards;
 }
 
 .home-ui > * {
