@@ -228,21 +228,6 @@ body {
   display: inline-block;
 }
 
-.home-invert-text::after {
-  content: attr(data-invert-text);
-  position: absolute;
-  inset: 0;
-  color: var(--home-bg);
-  -webkit-mask-image: var(--home-invert-mask);
-  mask-image: var(--home-invert-mask);
-  -webkit-mask-repeat: no-repeat;
-  mask-repeat: no-repeat;
-  -webkit-mask-size: 100vw 100vh;
-  mask-size: 100vw 100vh;
-  -webkit-text-stroke: 1px var(--home-ink);
-  pointer-events: none;
-}
-
 .home-invert-icon {
   color: var(--home-ink);
 }
