@@ -1,10 +1,6 @@
-type HomeHeroProps = {
-  count: number;
-};
-
-export default function HomeHero({ count }: HomeHeroProps) {
+export default function HomeHero() {
   return (
-    <div className="max-w-[470px] pb-6 lg:pl-3">
+    <div className="home-hero-copy max-w-[470px] pb-6 lg:pl-3">
       <div className="flex items-start">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
@@ -20,13 +16,6 @@ export default function HomeHero({ count }: HomeHeroProps) {
         data-invert-text="from 20+ NYC artists"
       >
         from 20+ NYC artists
-      </p>
-
-      <p
-        className="home-invert-text mt-[18px] text-[15px] font-medium opacity-70"
-        data-invert-text={`20+ artists • ${count * 12} posters`}
-      >
-        120+ artists • {count * 12} posters
       </p>
     </div>
   );

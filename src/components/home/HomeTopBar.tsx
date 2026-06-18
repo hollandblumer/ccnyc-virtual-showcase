@@ -45,7 +45,7 @@ export default function HomeTopBar() {
       <a
         aria-label="Instagram"
         className="home-invert-icon pointer-events-auto absolute right-[18px] top-[11px] inline-flex h-14 w-14 items-center justify-center"
-        href="https://www.instagram.com/"
+        href="https://instagram.com/creativecodingnyc"
         rel="noreferrer"
         target="_blank"
       >
