@@ -1,14 +1,68 @@
 "use client";
 
+import { useEffect, useMemo, useState } from "react";
+
 import HomeHero from "./HomeHero";
 import HomeInvertMask from "./HomeInvertMask";
 import HomeScene from "./HomeScene";
 import HomeTopBar from "./HomeTopBar";
-import { posters } from "./homeData";
+import { posters, type PosterRecord } from "./homeData";
+
+type FeaturedPostersResponse = {
+  featuredWeekStart: string;
+  posters: Array<{
+    id: number;
+    title: string;
+    artist: string;
+    tag: string;
+  }>;
+};
 
 export default function HomeExperience() {
-  const activePosterId = posters[0]?.id ?? null;
-  const featuredPosters = posters.slice(0, 4);
+  const [featuredPosterIds, setFeaturedPosterIds] = useState<number[]>(
+    posters.slice(0, 4).map((poster) => poster.id),
+  );
+  const activePosterId = featuredPosterIds[0] ?? posters[0]?.id ?? null;
+  const featuredPosters = useMemo(() => {
+    const sqlFeaturedPosters = featuredPosterIds
+      .map((id) => posters.find((poster) => poster.id === id))
+      .filter((poster): poster is PosterRecord => Boolean(poster));
+
+    return sqlFeaturedPosters.length > 0
+      ? sqlFeaturedPosters
+      : posters.slice(0, 4);
+  }, [featuredPosterIds]);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadFeaturedPosters() {
+      try {
+        const response = await fetch("/api/featured-posters", {
+          cache: "no-store",
+        });
+
+        if (!response.ok) {
+          throw new Error("Featured posters request failed.");
+        }
+
+        const featuredResponse = (await response.json()) as FeaturedPostersResponse;
+        const ids = featuredResponse.posters.map((poster) => poster.id);
+
+        if (isMounted) {
+          setFeaturedPosterIds(ids);
+        }
+      } catch (error) {
+        console.warn(error);
+      }
+    }
+
+    loadFeaturedPosters();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   return (
     <main className="home-shell">
